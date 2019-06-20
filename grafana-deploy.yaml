@@ -47,17 +47,7 @@ spec:
         volumeMounts:
           - name: grafana-persistent-storage
             mountPath: /var/lib/grafana/
-          #- name: config-grafana 
-           # mountPath: /etc/grafana/grafana.ini
-            #subPath: grafana.ini
       volumes:
-      #- name: config-grafana
-       # configMap:
-        #  defaultMode: 420
-         # name: test-grafana
-      #- name: grafana-persistent-storage
-        #hostPath:
-          #path: /var/lib/grafana 
       - name: grafana-persistent-storage
         nfs:
           server: 192.168.199.222
