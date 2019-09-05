@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hawkeye-grafana
+  namespace: kube-system 
+  labels:
+    app: hawkeye-grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hawkeye-grafana
+  template:
+    metadata:
+      labels:
+        app: hawkeye-grafana
+    spec:
+      containers:
+      - image: grafana/grafana:6.0.0
+        name: grafana
+        imagePullPolicy: IfNotPresent
+        # env:
+        env:
+          - name: GF_PATHS_PROVISIONING
+            value: /var/lib/grafana/provisioning
+        resources:
+          # keep request = limit to keep this container in guaranteed class
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 3000
+          # initialDelaySeconds: 30
+          # timeoutSeconds: 1
+        volumeMounts:
+        - name: grafana-persistent-storage
+          mountPath: /var/lib/grafana/
+        - name: config
+          mountPath: /etc/grafana/
+      initContainers:
+      - name: "init-chown-data"
+        image: "busybox:latest"
+        imagePullPolicy: "IfNotPresent"
+        command: ["chown", "-R", "472:472", "/var/lib/grafana/"]
+        volumeMounts:
+        - name: grafana-persistent-storage
+          mountPath: /var/lib/grafana/
+          subPath: ""
+      volumes:
+      - name: config
+        configMap:
+          name: hawkeye-grafana-cm
+      - name: grafana-persistent-storage
+        nfs:
+          server: 172.16.1.190
+          path: "/data/grafana"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: hawkeye-grafana
+  name: hawkeye-grafana
+  namespace: kube-system 
+spec:
+  #type: NodePort 
+  ports:
+  - name: http
+    #port: 80
+    port: 3000
+    protocol: TCP
+    targetPort: 3000
+    #nodePort: 30014
+  selector:
+    app: hawkeye-grafana
+---
+apiVersion: extensions/v1beta1
+kind: Ingress 
+metadata:
+  name: grafana-ingress
+  namespace: kube-system
+spec:
+  rules:
+  - host: tgrafana.shhzcj.com
+    http:
+      paths:
+      - backend:
+          serviceName: hawkeye-grafana
+          servicePort: 3000
+
