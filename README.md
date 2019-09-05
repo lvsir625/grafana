@@ -1,7 +1,8 @@
 # grafana
 本文设计4.2和6.0两个版本的grafana
 config.toml  grafana-deployment6.yaml分别是6.0版本的configmap和部署清单
-其他两个清单是4.0的\n
+其他两个清单是4.0的
+
 用到的模板有
 315这个模板是cadvisor采集的各种指标的图表
 1860这个模板是node-exporter采集的各种主机相关的指标的图表
